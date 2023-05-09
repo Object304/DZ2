@@ -27,7 +27,11 @@ private:
 	Img* processedImg;
 	Img* mask;
 
-	void imgOut();
+	void imgOut(string key);
+	int** createMat(int n, int m);
+	void deleteMat(int** A);
+	void matOut(int** A, int height, int width);
+	void putMask(int**& A, int y, int x, int height, int width, int** &Used);
 	//здесь можно объ€вл€ть другие переменные и функции
 public:
 	//здесь нельз€ объ€вл€ть функции и переменные
@@ -50,7 +54,7 @@ public:
 		input		:	srcImg = 1, обрабатываетс€ srcImg  - результат записываетс€ в processedImg
 						srcImg = 0, обрабатываетс€ processedImg - результат записываетс€ в processedImg
 	*/
-	int dilatation(int srcImg = 1){};	//исправить на dilatation
+	int dilatation(int srcImg);	//исправить на dilatation
 	/*эрози€ картинки, результат записать в processedImg*/
 	int erosion(int srcImg = 1){};
 	/*

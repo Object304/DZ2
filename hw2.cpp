@@ -31,12 +31,61 @@ Img::~Img() {
 	srcImg = nullptr;
 }
 
-void ImageProcess::imgOut() {
-	for (int i = 0; i < srcImg->height; i++) {
-		for (int j = 0; j < srcImg->width; j++) {
-			cout << srcImg->srcImg[i * srcImg->width + j];
+void ImageProcess::imgOut(string key) {
+	if (key == "source")
+		for (int i = 0; i < srcImg->height; i++) {
+			for (int j = 0; j < srcImg->width; j++) {
+				cout << srcImg->srcImg[i * srcImg->width + j];
+			}
+			cout << endl;
+		}
+	if (key == "mask") {
+		for (int i = 0; i < 9; i++) {
+			cout << mask->srcImg[i];
 		}
 		cout << endl;
+	}
+}
+
+int** ImageProcess::createMat(int n, int m) {
+	int** A = new int* [n];
+	A[0] = new int[n * m];
+	for (int i = 1; i < n; i++) {
+		A[i] = A[0] + i * m;
+	}
+	return A;
+}
+
+void ImageProcess::deleteMat(int** A) {
+	delete[] A[0];
+	delete[] A;
+}
+
+void ImageProcess::matOut(int** A, int h, int w) {
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++)
+			cout << A[i][j] << " ";
+		cout << endl;
+	}
+	cout << endl << endl;
+}
+
+void ImageProcess::putMask(int** &A, int y, int x, int height, int width, int** &Used) {
+	y -= 1;
+	x -= 1;
+	for (int i = 0; i < 3; i++, y++) {
+		if (y < 0 || y > height)
+			continue;
+		for (int j = 0; j < 3; j++, x++) {
+			if (x < 0 || x > width)
+				continue;
+			if (A[y][x] == 0) {
+				A[y][x] = mask->srcImg[i * 3 + j];
+				if (A[y][x] == 1)
+					Used[y][x] = 1;
+			}
+		}
+		x -= 3;
 	}
 }
 
@@ -90,7 +139,7 @@ ImageProcess::ImageProcess(const char* fileName) {
 	delete[] array;
 	delete[] ar;
 	delete[] buf;
-	imgOut();
+	//imgOut("mask");
 }
 
 ImageProcess::~ImageProcess() {
@@ -102,3 +151,79 @@ ImageProcess::~ImageProcess() {
 	mask = nullptr;
 }
 
+int ImageProcess::updateMask(const Img& newMask) {
+	*mask = newMask;
+	//imgOut("mask");
+	return 0;
+}
+
+int ImageProcess::dilatation(int key) {
+	if (key == 1) {
+
+		int w = srcImg->width, h = srcImg->height;
+		int** A = createMat(h, w);
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				A[i][j] = srcImg->srcImg[i * w + j];
+			}
+		}
+		int** Used = createMat(h, w);
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				Used[i][j] = 0;
+			}
+		}
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				if (A[i][j] == 1 && Used[i][j] != 1) {
+					putMask(A, i, j, h, w, Used);
+				}
+			}
+		}
+		matOut(A, h, w);
+
+		processedImg = srcImg;
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				processedImg->srcImg[i * w + j] = A[i][j];
+			}
+		}
+		
+		deleteMat(A);
+		deleteMat(Used);
+		return 0;
+	}
+	if (key == 0) {
+		int w = processedImg->width, h = processedImg->height;
+		int** A = createMat(h, w);
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				A[i][j] = processedImg->srcImg[i * w + j];
+			}
+		}
+		int** Used = createMat(h, w);
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				Used[i][j] = 0;
+			}
+		}
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				if (A[i][j] == 1 && Used[i][j] != 1) {
+					putMask(A, i, j, h, w, Used);
+				}
+			}
+		}
+		matOut(A, h, w);
+
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				processedImg->srcImg[i * w + j] = A[i][j];
+			}
+		}
+		deleteMat(A);
+		deleteMat(Used);
+		return 0;
+	}
+	return 1;
+}
