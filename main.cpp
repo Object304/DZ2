@@ -1,7 +1,7 @@
 ﻿#include "hw2.h"
-#include <iostream>
 
 int main()
 {
-    std::cout << "Hello World!\n";
+	ImageProcess* ip = new ImageProcess{ "Format0.txt" };
+	return 0;
 }
