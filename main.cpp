@@ -13,5 +13,6 @@ int main()
 	ip->dilatation(0);
 	ip->dilatation(0);
 
+	delete ip;
 	return 0;
 }

@@ -56,7 +56,7 @@ public:
 	*/
 	int dilatation(int srcImg);	//исправить на dilatation
 	/*эрозия картинки, результат записать в processedImg*/
-	int erosion(int srcImg = 1){};
+	int erosion(int srcImg);
 	/*
 		загрузить/сохранить из файла с имененм fileName картинку
 		input		:	fileName - имя файла
