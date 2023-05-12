@@ -12,8 +12,8 @@ Img::Img(int w, int h) {
 	srcImg = nullptr;
 	width = w;
 	height = h;
-	x_c = 0;
-	y_c = 0;
+	x_c = w / 2;
+	y_c = h / 2;
 }
 
 Img::Img(const int* src, int w, int h) {
@@ -22,8 +22,8 @@ Img::Img(const int* src, int w, int h) {
 		srcImg[i] = src[i];
 	width = w;
 	height = h;
-	x_c = 0;
-	y_c = 0;
+	x_c = w / 2;
+	y_c = h / 2;
 }
 
 Img::~Img() {
@@ -89,50 +89,79 @@ void ImageProcess::putMask(int** &A, int y, int x, int height, int width, int** 
 	}
 }
 
+void ImageProcess::checkMask(int** A, int y, int x, int height, int width, int** &Mirror) {
+	int sourceX = x, sourceY = y;
+	y -= 1;
+	x -= 1;
+	for (int i = 0; i < 3; i++, y++) {
+		if (y < 0 || y > height - 1)
+			continue;
+		for (int j = 0; j < 3; j++, x++) {
+			if (x < 0 || x > width - 1)
+				continue;
+			if (A[y][x] < mask->srcImg[i * 3 + j]) {
+				Mirror[sourceY][sourceX] = 0;
+			}
+		}
+		x -= 3;
+	}
+}
+
 ImageProcess::ImageProcess() {
 	srcImg = new Img;
 	processedImg = srcImg;
 	int* ar = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
-	mask = new Img(ar, 3, 3);
+	mask = new Img{ ar, 3, 3 };
+	delete[] ar;
 }
 
 ImageProcess::ImageProcess(int w, int h) {
 	srcImg = new Img( w, h );
 	processedImg = srcImg;
 	int* ar = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
-	mask = new Img( ar, 3, 3 );
+	mask = new Img{ ar, 3, 3 };
+	delete[] ar;
 }
 
 ImageProcess::ImageProcess(const Img* img) {
-	srcImg = new Img{ img->srcImg, img->width, img->height };
+	srcImg = new Img( img->srcImg, img->width, img->height );
 	processedImg = srcImg;
 	int* ar = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
-	mask = new Img( ar, 3, 3 );
+	mask = new Img{ ar, 3, 3 };
+	delete[] ar;
 }
 
 ImageProcess::ImageProcess(const char* fileName) {
 	FILE* fLog = fopen(fileName, "r");
-	fseek(fLog, 0, SEEK_END);
-	int sizeF = ftell(fLog);
-	fseek(fLog, 0, SEEK_SET);
-
 	int w, h;
-	if (fscanf(fLog, "%d\t%d\n", &w, &h) == false) { 
-		cout << "wrong input" << endl; 
+	if (fscanf(fLog, "%d\t%d", &w, &h) == false) { 
+		cout << "wrong input" << endl;
 		fclose(fLog);
+		srcImg = new Img;
+		processedImg = srcImg;
+		int* ar = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
+		mask = new Img{ ar, 3, 3 };
+		delete[] ar;
 		return;
 	}
 	int* ar = new int[w * h];
 
-	char* buf = new char[sizeF];
-	fread(buf, 1, sizeF, fLog);
+	string text;
+	char* buf = new char[255];
+	while (fscanf(fLog, "%s", buf) != EOF) {
+		text += buf;
+	};
+
+	for (int i = 0; i < h * w; i++) {
+		ar[i] = (int)text[i] - '0';
+	}
 	fclose(fLog);
-	for (int i = 0; i < sizeF; ar[i] = buf[i] - 0x30, i++);
-	
-	srcImg = new Img( ar, w, h );
+	srcImg = new Img{ ar, w, h };
 	processedImg = srcImg;
 	int* array = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
 	mask = new Img( array, 3, 3 );
+	delete[] array;
+	delete[] ar;
 	delete[] buf;
 	//imgOut("mask");
 }
@@ -149,6 +178,11 @@ ImageProcess::~ImageProcess() {
 int ImageProcess::updateMask(const Img& newMask) {
 	*mask = newMask;
 	//imgOut("mask");
+	return 0;
+}
+
+int ImageProcess::updateSrcImg() {
+	srcImg = processedImg;
 	return 0;
 }
 
@@ -225,7 +259,6 @@ int ImageProcess::dilatation(int key) {
 
 int ImageProcess::erosion(int key) {
 	if (key == 1) {
-
 		int w = srcImg->width, h = srcImg->height;
 		int** A = createMat(h, w);
 		for (int i = 0; i < h; i++) {
@@ -233,19 +266,20 @@ int ImageProcess::erosion(int key) {
 				A[i][j] = srcImg->srcImg[i * w + j];
 			}
 		}
-		int** Used = createMat(h, w);
+		int** Mirror = createMat(h, w);
+		for (int i = 0; i < h; i++)
+			for (int j = 0; j < w; j++)
+				Mirror[i][j] = A[i][j];
 		for (int i = 0; i < h; i++) {
 			for (int j = 0; j < w; j++) {
-				Used[i][j] = 0;
-			}
-		}
-		for (int i = 0; i < h; i++) {
-			for (int j = 0; j < w; j++) {
-				if (A[i][j] == 1 && Used[i][j] != 1) {
-					putMask(A, i, j, h, w, Used);
+				if (A[i][j] == 1) {
+					checkMask(A, i, j, h, w, Mirror);
 				}
 			}
 		}
+		for (int i = 0; i < h; i++)
+			for (int j = 0; j < w; j++)
+				A[i][j] = Mirror[i][j];
 		matOut(A, h, w);
 
 		processedImg = srcImg;
@@ -256,7 +290,7 @@ int ImageProcess::erosion(int key) {
 		}
 
 		deleteMat(A);
-		deleteMat(Used);
+		deleteMat(Mirror);
 		return 0;
 	}
 	if (key == 0) {
@@ -267,19 +301,20 @@ int ImageProcess::erosion(int key) {
 				A[i][j] = processedImg->srcImg[i * w + j];
 			}
 		}
-		int** Used = createMat(h, w);
+		int** Mirror = createMat(h, w);
+		for (int i = 0; i < h; i++) 
+			for (int j = 0; j < w; j++)
+				Mirror[i][j] = A[i][j];
 		for (int i = 0; i < h; i++) {
 			for (int j = 0; j < w; j++) {
-				Used[i][j] = 0;
-			}
-		}
-		for (int i = 0; i < h; i++) {
-			for (int j = 0; j < w; j++) {
-				if (A[i][j] == 1 && Used[i][j] != 1) {
-					putMask(A, i, j, h, w, Used);
+				if (A[i][j] == 1) {
+					checkMask(A, i, j, h, w, Mirror);
 				}
 			}
 		}
+		for (int i = 0; i < h; i++) 
+			for (int j = 0; j < w; j++)
+				A[i][j] = Mirror[i][j];
 		matOut(A, h, w);
 
 		for (int i = 0; i < h; i++) {
@@ -287,8 +322,9 @@ int ImageProcess::erosion(int key) {
 				processedImg->srcImg[i * w + j] = A[i][j];
 			}
 		}
+
 		deleteMat(A);
-		deleteMat(Used);
+		deleteMat(Mirror);
 		return 0;
 	}
 	return 1;

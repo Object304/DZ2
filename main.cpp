@@ -6,13 +6,9 @@ int main()
 
 	int* ar = new int[9] { 1, 1, 1, 1, 1, 1, 1, 1, 1, };
 	Img* mask = new Img{ ar, 3, 3 };
-	//ip->updateMask(*mask);
+	ip->updateMask(*mask);
 	delete[] ar;
-	ip->dilatation(1);
-	ip->dilatation(0);
-	ip->dilatation(0);
-	ip->dilatation(0);
+	//ip->erosion(1);
 
-	delete ip;
 	return 0;
 }

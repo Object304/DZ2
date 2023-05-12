@@ -32,6 +32,7 @@ private:
 	void deleteMat(int** A);
 	void matOut(int** A, int height, int width);
 	void putMask(int**& A, int y, int x, int height, int width, int** &Used);
+	void checkMask(int** A, int y, int x, int height, int width, int** &Mirror);
 	//здесь можно объ€вл€ть другие переменные и функции
 public:
 	//здесь нельз€ объ€вл€ть функции и переменные
@@ -48,15 +49,15 @@ public:
 	/*задание маски*/
 	int updateMask(const Img& mask);
 	/*перезаписать исходную картинку картинкой, котора€ была получена в результате дилатации и/или эрозии*/
-	int updateSrcImg(){};
+	int updateSrcImg();
 	/*дилатаци€ картинки, результат записать в processedImg*/
 	/*
 		input		:	srcImg = 1, обрабатываетс€ srcImg  - результат записываетс€ в processedImg
 						srcImg = 0, обрабатываетс€ processedImg - результат записываетс€ в processedImg
 	*/
-	int dilatation(int srcImg);	//исправить на dilatation
+	int dilatation(int srcImg = 1);	//исправить на dilatation
 	/*эрози€ картинки, результат записать в processedImg*/
-	int erosion(int srcImg);
+	int erosion(int srcImg = 1);
 	/*
 		загрузить/сохранить из файла с имененм fileName картинку
 		input		:	fileName - им€ файла
