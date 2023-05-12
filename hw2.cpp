@@ -107,9 +107,53 @@ void ImageProcess::checkMask(int** A, int y, int x, int height, int width, int**
 	}
 }
 
+void ImageProcess::copyImg(Img* target, Img* source) {
+	target->height = source->height;
+	target->width = source->width;
+	target->x_c = source->x_c;
+	target->y_c = source->y_c;
+	for (int i = 0; i < source->height; i++) {
+		for (int j = 0; j < source->width; j++) {
+			target->srcImg[i * target->width + j] = source->srcImg[i * source->width + j];
+		}
+	}
+}
+
+void ImageProcess::copyImg(Img* target, const Img* source) {
+	target->height = source->height;
+	target->width = source->width;
+	target->x_c = source->x_c;
+	target->y_c = source->y_c;
+	for (int i = 0; i < source->height; i++) {
+		for (int j = 0; j < source->width; j++) {
+			target->srcImg[i * target->width + j] = source->srcImg[i * source->width + j];
+		}
+	}
+}
+
+void ImageProcess::checkListContours(list<list<pair<int /*x*/, int /*y*/>>> contours) {
+	list<list<pair<int /*x*/, int /*y*/>>>::iterator this_contour = contours.begin();
+	list<pair<int /*x*/, int /*y*/>> contour = *this_contour;
+	list<pair<int /*x*/, int /*y*/>>::iterator this_pair = contour.begin();
+	for (int i = 0; i < srcImg->height; i++) {
+		for (int j = 0; j < srcImg->width; j++) {
+			while (this_pair != contour.end()) {
+				if (i == this_pair->second && j == this_pair->first) {
+					cout << "1";
+				}
+				else {
+					cout << "0";
+				}
+				this_pair++;
+			}
+		}
+		cout << endl;
+	}
+}
+
 ImageProcess::ImageProcess() {
 	srcImg = new Img;
-	processedImg = srcImg;
+	processedImg = new Img;
 	int* ar = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
 	mask = new Img{ ar, 3, 3 };
 	delete[] ar;
@@ -117,7 +161,7 @@ ImageProcess::ImageProcess() {
 
 ImageProcess::ImageProcess(int w, int h) {
 	srcImg = new Img( w, h );
-	processedImg = srcImg;
+	processedImg = new Img( w, h );
 	int* ar = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
 	mask = new Img{ ar, 3, 3 };
 	delete[] ar;
@@ -125,7 +169,7 @@ ImageProcess::ImageProcess(int w, int h) {
 
 ImageProcess::ImageProcess(const Img* img) {
 	srcImg = new Img( img->srcImg, img->width, img->height );
-	processedImg = srcImg;
+	processedImg = new Img(img->srcImg, img->width, img->height);
 	int* ar = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
 	mask = new Img{ ar, 3, 3 };
 	delete[] ar;
@@ -138,7 +182,7 @@ ImageProcess::ImageProcess(const char* fileName) {
 		cout << "wrong input" << endl;
 		fclose(fLog);
 		srcImg = new Img;
-		processedImg = srcImg;
+		processedImg = new Img;
 		int* ar = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
 		mask = new Img{ ar, 3, 3 };
 		delete[] ar;
@@ -157,13 +201,12 @@ ImageProcess::ImageProcess(const char* fileName) {
 	}
 	fclose(fLog);
 	srcImg = new Img{ ar, w, h };
-	processedImg = srcImg;
+	processedImg = new Img{ ar, w, h };;
 	int* array = new int[9] { 0, 1, 0, 1, 1, 1, 0, 1, 0};
 	mask = new Img( array, 3, 3 );
 	delete[] array;
 	delete[] ar;
 	delete[] buf;
-	//imgOut("mask");
 }
 
 ImageProcess::~ImageProcess() {
@@ -176,13 +219,12 @@ ImageProcess::~ImageProcess() {
 }
 
 int ImageProcess::updateMask(const Img& newMask) {
-	*mask = newMask;
-	//imgOut("mask");
+	copyImg(mask, &newMask);
 	return 0;
 }
 
 int ImageProcess::updateSrcImg() {
-	srcImg = processedImg;
+	copyImg(srcImg, processedImg);;
 	return 0;
 }
 
@@ -226,7 +268,7 @@ int ImageProcess::dilatation(int key) {
 	}
 	matOut(A, h, w);
 	if (key == 1)
-		processedImg = srcImg;
+		copyImg(processedImg, srcImg);
 	for (int i = 0; i < h; i++) {
 		for (int j = 0; j < w; j++) {
 			processedImg->srcImg[i * w + j] = A[i][j];
@@ -238,6 +280,9 @@ int ImageProcess::dilatation(int key) {
 }
 
 int ImageProcess::erosion(int key) {
+
+	checkListContours(getListContours());
+
 	int w = srcImg->width, h = srcImg->height;
 	int** A = createMat(h, w);
 	if (key == 1) {
@@ -279,7 +324,7 @@ int ImageProcess::erosion(int key) {
 	matOut(A, h, w);
 
 	if (key == 1)
-		processedImg = srcImg;
+		copyImg(processedImg, srcImg);
 	for (int i = 0; i < h; i++) {
 		for (int j = 0; j < w; j++) {
 			processedImg->srcImg[i * w + j] = A[i][j];
@@ -288,4 +333,67 @@ int ImageProcess::erosion(int key) {
 	deleteMat(A);
 	deleteMat(Mirror);
 	return 0;
+}
+
+int ImageProcess::loadImgFromFile(const char* fileName, int format) {
+	FILE* fLog = fopen(fileName, "r");
+	int w, h;
+	if (fscanf(fLog, "%d\t%d", &w, &h) == false) {
+		cout << "wrong input" << endl;
+		fclose(fLog);
+		return 1;
+	}
+	int* ar = new int[w * h];
+	string text;
+	char* buf = new char[255];
+	while (fscanf(fLog, "%s", buf) != EOF) {
+		text += buf;
+	};
+	for (int i = 0; i < h * w; i++) {
+		ar[i] = (int)text[i] - '0';
+	}
+	fclose(fLog);
+	Img* NEWsrcImg = new Img{ ar, w, h };
+	copyImg(srcImg, NEWsrcImg);
+	delete NEWsrcImg;
+	delete[] ar;
+	delete[] buf;
+	return 0;
+}
+
+int ImageProcess::saveImgToFile(const char* fileName, int format) {
+	if ((format == 1 || format == 0) == false) {
+		cout << "wrong input" << endl;
+		return 1;
+	}
+	FILE* fLog = fopen(fileName, "w");
+	fprintf(fLog, "%d\t%d\n", srcImg->width, srcImg->height);
+	for (int i = 0; i < srcImg->height; i++) {
+		for (int j = 0; j < srcImg->width; j++) {
+			fprintf(fLog, "%d", srcImg->srcImg[i * srcImg->width + j]);
+		}
+		if (format == 1) {
+			fprintf(fLog, "\n");
+		}
+	}
+	fclose(fLog);
+	return 0;
+}
+
+list<list<pair<int /*x*/, int /*y*/>>> ImageProcess::getListContours() {
+	dilatation(1);
+	list<list<pair<int /*x*/, int /*y*/>>> contours;
+	list<pair<int /*x*/, int /*y*/>> contour;
+	pair<int, int> point;
+	for (int i = 0; i < srcImg->height; i++) {
+		for (int j = 0; j < srcImg->width; j++) {
+			if (srcImg->srcImg[i * srcImg->width + j] != processedImg->srcImg[i * srcImg->width + j]) {
+				point.first = j;
+				point.second = i;
+				contour.push_back(point);
+			}
+		}
+	}
+	contours.push_back(contour);
+	return contours;
 }

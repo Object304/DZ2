@@ -33,6 +33,9 @@ private:
 	void matOut(int** A, int height, int width);
 	void putMask(int**& A, int y, int x, int height, int width, int** &Used);
 	void checkMask(int** A, int y, int x, int height, int width, int** &Mirror);
+	void copyImg(Img* target, Img* source);
+	void copyImg(Img* target, const Img* source);
+	void checkListContours(list<list<pair<int /*x*/, int /*y*/>>> contours);
 	//здесь можно объ€вл€ть другие переменные и функции
 public:
 	//здесь нельз€ объ€вл€ть функции и переменные
@@ -64,9 +67,9 @@ public:
 						format - формат файла 	0 - последовательность 0 и 1, без перехода на новую строку
 												1 - последовательность 0 и 1, с переходом на новую строку
 	*/
-	int loadImgFromFile(const char* fileName, int format = 1){};
-	int saveImgToFile(const char* fileName, int format = 1){};
+	int loadImgFromFile(const char* fileName, int format = 1);
+	int saveImgToFile(const char* fileName, int format = 1);
 
 	/*на зачЄт без зачЄта*/
-	std::list<std::list<std::pair<int /*x*/, int /*y*/>>> getListContours(){};
+	std::list<std::list<std::pair<int /*x*/, int /*y*/>>> getListContours();
 };
