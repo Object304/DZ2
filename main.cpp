@@ -4,11 +4,16 @@ int main()
 {
 	ImageProcess* ip = new ImageProcess{ "Format_test.txt" };
 
-	int* ar = new int[9] { 1, 1, 1, 1, 1, 1, 1, 1, 1, };
-	Img* mask = new Img{ ar, 3, 3 };
-	ip->updateMask(*mask);
-	delete[] ar;
-	//ip->erosion(1);
+	//int* ar = new int[9] { 1, 1, 1, 1, 1, 1, 1, 1, 1, };
+	//Img* mask = new Img{ ar, 3, 3 };
+	//ip->updateMask(*mask);
+	//delete[] ar;
+	ip->dilatation(1);
+	ip->dilatation(0);
+	ip->dilatation(0);
+	ip->erosion(0);
+	ip->erosion(0);
+	ip->erosion(0);
 
 	return 0;
 }
