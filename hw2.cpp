@@ -137,18 +137,22 @@ void ImageProcess::checkListContours(list<list<pair<int /*x*/, int /*y*/>>> cont
 	list<pair<int /*x*/, int /*y*/>>::iterator this_pair = contour.begin();
 	for (int i = 0; i < srcImg->height; i++) {
 		for (int j = 0; j < srcImg->width; j++) {
+			bool one = false;
 			while (this_pair != contour.end()) {
 				if (i == this_pair->second && j == this_pair->first) {
-					cout << "1";
-				}
-				else {
-					cout << "0";
+					cout << "1" << " ";
+					one = true;
+					break;
 				}
 				this_pair++;
 			}
+			if (!one)
+				cout << "0" << " ";
+			this_pair = contour.begin();
 		}
 		cout << endl;
 	}
+	cout << endl;
 }
 
 ImageProcess::ImageProcess() {
@@ -280,9 +284,6 @@ int ImageProcess::dilatation(int key) {
 }
 
 int ImageProcess::erosion(int key) {
-
-	checkListContours(getListContours());
-
 	int w = srcImg->width, h = srcImg->height;
 	int** A = createMat(h, w);
 	if (key == 1) {

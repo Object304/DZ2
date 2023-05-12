@@ -2,7 +2,7 @@
 
 int main()
 {
-	ImageProcess* ip = new ImageProcess("Format_test.txt");
+	ImageProcess* ip = new ImageProcess("Format1.txt");
 
 	ip->erosion(1);
 
