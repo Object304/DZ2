@@ -31,20 +31,14 @@ Img::~Img() {
 	srcImg = nullptr;
 }
 
-void ImageProcess::imgOut(string key) {
-	if (key == "source")
-		for (int i = 0; i < srcImg->height; i++) {
-			for (int j = 0; j < srcImg->width; j++) {
-				cout << srcImg->srcImg[i * srcImg->width + j];
-			}
-			cout << endl;
-		}
-	if (key == "mask") {
-		for (int i = 0; i < 9; i++) {
-			cout << mask->srcImg[i];
+void ImageProcess::imgOut(Img* &Image) {
+	for (int i = 0; i < Image->height; i++) {
+		for (int j = 0; j < Image->width; j++) {
+			cout << Image->srcImg[i * Image->width + j] << " ";
 		}
 		cout << endl;
 	}
+	cout << endl;
 }
 
 int** ImageProcess::createMat(int n, int m) {
@@ -71,64 +65,50 @@ void ImageProcess::matOut(int** A, int h, int w) {
 }
 
 void ImageProcess::putMask(int** &A, int y, int x, int height, int width, int** &Used) {
-	y -= 1;
-	x -= 1;
-	for (int i = 0; i < 3; i++, y++) {
+	y -= mask->height / 2;
+	x -= mask->width / 2;
+	for (int i = 0; i < mask->height; i++, y++) {
 		if (y < 0 || y > height - 1)
 			continue;
-		for (int j = 0; j < 3; j++, x++) {
+		for (int j = 0; j < mask->width; j++, x++) {
 			if (x < 0 || x > width - 1)
 				continue;
 			if (A[y][x] == 0) {
-				A[y][x] = mask->srcImg[i * 3 + j];
+				A[y][x] = mask->srcImg[i * mask->width + j];
 				if (A[y][x] == 1)
 					Used[y][x] = 1;
 			}
 		}
-		x -= 3;
+		x -= mask->width;
 	}
 }
 
 void ImageProcess::checkMask(int** A, int y, int x, int height, int width, int** &Mirror) {
 	int sourceX = x, sourceY = y;
-	y -= 1;
-	x -= 1;
-	for (int i = 0; i < 3; i++, y++) {
+	y -= mask->height / 2;
+	x -= mask->width / 2;
+	for (int i = 0; i < mask->height; i++, y++) {
 		if (y < 0 || y > height - 1)
 			continue;
-		for (int j = 0; j < 3; j++, x++) {
+		for (int j = 0; j < mask->width; j++, x++) {
 			if (x < 0 || x > width - 1)
 				continue;
-			if (A[y][x] < mask->srcImg[i * 3 + j]) {
+			if (A[y][x] < mask->srcImg[i * mask->width + j]) {
 				Mirror[sourceY][sourceX] = 0;
 			}
 		}
-		x -= 3;
+		x -= mask->width;
 	}
 }
 
-void ImageProcess::copyImg(Img* target, Img* source) {
-	target->height = source->height;
-	target->width = source->width;
-	target->x_c = source->x_c;
-	target->y_c = source->y_c;
-	for (int i = 0; i < source->height; i++) {
-		for (int j = 0; j < source->width; j++) {
-			target->srcImg[i * target->width + j] = source->srcImg[i * source->width + j];
-		}
-	}
+void ImageProcess::copyImg(Img* &target, Img* source) {
+	delete target;
+	target = new Img(source->srcImg, source->width, source->height);
 }
 
-void ImageProcess::copyImg(Img* target, const Img* source) {
-	target->height = source->height;
-	target->width = source->width;
-	target->x_c = source->x_c;
-	target->y_c = source->y_c;
-	for (int i = 0; i < source->height; i++) {
-		for (int j = 0; j < source->width; j++) {
-			target->srcImg[i * target->width + j] = source->srcImg[i * source->width + j];
-		}
-	}
+void ImageProcess::copyImg(Img* &target, const Img* source) {
+	delete target;
+	target = new Img(source->srcImg, source->width, source->height);
 }
 
 void ImageProcess::checkListContours(list<list<pair<int /*x*/, int /*y*/>>> contours) {
@@ -270,7 +250,6 @@ int ImageProcess::dilatation(int key) {
 			}
 		}
 	}
-	matOut(A, h, w);
 	if (key == 1)
 		copyImg(processedImg, srcImg);
 	for (int i = 0; i < h; i++) {
@@ -322,7 +301,6 @@ int ImageProcess::erosion(int key) {
 	for (int i = 0; i < h; i++)
 		for (int j = 0; j < w; j++)
 			A[i][j] = Mirror[i][j];
-	matOut(A, h, w);
 
 	if (key == 1)
 		copyImg(processedImg, srcImg);

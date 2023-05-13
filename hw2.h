@@ -27,17 +27,18 @@ private:
 	Img* processedImg;
 	Img* mask;
 
-	void imgOut(string key);
+	void imgOut(Img*& Image);
 	int** createMat(int n, int m);
 	void deleteMat(int** A);
 	void matOut(int** A, int height, int width);
 	void putMask(int**& A, int y, int x, int height, int width, int** &Used);
 	void checkMask(int** A, int y, int x, int height, int width, int** &Mirror);
-	void copyImg(Img* target, Img* source);
-	void copyImg(Img* target, const Img* source);
-	void checkListContours(list<list<pair<int /*x*/, int /*y*/>>> contours);
+	void copyImg(Img* &target, Img* source);
+	void copyImg(Img* &target, const Img* source);
+	//void checkListContours(list<list<pair<int /*x*/, int /*y*/>>> contours);
 	//здесь можно объ€вл€ть другие переменные и функции
 public:
+	void checkListContours(list<list<pair<int /*x*/, int /*y*/>>> contours);
 	//здесь нельз€ объ€вл€ть функции и переменные
 	/**/
 	ImageProcess();
