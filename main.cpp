@@ -20,7 +20,7 @@ int main()
 	delete mask1;
 
 	list<list<pair<int /*x*/, int /*y*/>>> contours = ip->getListContours();
-	ip->checkListContours(contours);
+	//ip->checkListContours(contours);
 
 	ip->dilatation(1);
 	ip->updateSrcImg();
@@ -30,7 +30,7 @@ int main()
 	ip->saveImgToFile("save2.txt");
 
 	contours = ip->getListContours();
-	ip->checkListContours(contours);
+	//ip->checkListContours(contours);
 
 	ip->erosion(1);
 	ip->updateSrcImg();
