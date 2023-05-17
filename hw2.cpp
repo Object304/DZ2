@@ -111,30 +111,6 @@ void ImageProcess::copyImg(Img* &target, const Img* source) {
 	target = new Img(source->srcImg, source->width, source->height);
 }
 
-void ImageProcess::checkListContours(list<list<pair<int /*x*/, int /*y*/>>> contours) {
-	list<list<pair<int /*x*/, int /*y*/>>>::iterator this_contour = contours.begin();
-	list<pair<int /*x*/, int /*y*/>> contour = *this_contour;
-	list<pair<int /*x*/, int /*y*/>>::iterator this_pair = contour.begin();
-	for (int i = 0; i < srcImg->height; i++) {
-		for (int j = 0; j < srcImg->width; j++) {
-			bool one = false;
-			while (this_pair != contour.end()) {
-				if (i == this_pair->second && j == this_pair->first) {
-					cout << "1" << " ";
-					one = true;
-					break;
-				}
-				this_pair++;
-			}
-			if (!one)
-				cout << "0" << " ";
-			this_pair = contour.begin();
-		}
-		cout << endl;
-	}
-	cout << endl;
-}
-
 ImageProcess::ImageProcess() {
 	srcImg = new Img;
 	processedImg = new Img;

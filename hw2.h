@@ -35,7 +35,6 @@ private:
 	void checkMask(int** A, int y, int x, int height, int width, int** &Mirror);
 	void copyImg(Img* &target, Img* source);
 	void copyImg(Img* &target, const Img* source);
-	void checkListContours(list<list<pair<int /*x*/, int /*y*/>>> contours);
 	//здесь можно объ€вл€ть другие переменные и функции
 public:
 	//здесь нельз€ объ€вл€ть функции и переменные
